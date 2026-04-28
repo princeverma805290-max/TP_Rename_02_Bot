@@ -73,7 +73,7 @@ async def remove_thumb(client, message):
     await message.reply("🗑 Thumbnail removed!")
 
 # ===== FILE HANDLE =====
-@app.on_message(filters.document | filters.video | filters.audio)
+@app.on_message(filters.media)
 async def rename_file(client, message: Message):
     user_id = message.from_user.id
 
