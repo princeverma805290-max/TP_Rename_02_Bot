@@ -1,10 +1,4 @@
-# VJ Join Request Acceptor Bot
-
-**A Advance Join Request Accept Bot Which Can Accept Both All Pending Join Request And New Join Request With Login Feature.**
-
-**For New Join Request Use This Repo [Click Here](https://github.com/VJBots/VJ-Auto-Approval-Bot)**
-
-## How To Deploy [Video Tutorial](https://youtu.be/2Unf-cLbJLY)
+# TP FILE RENAME 02 Bot
 
 #### Environment Variables
 
