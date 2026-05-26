@@ -20,8 +20,8 @@
 - `/seeauthorizeusers` - (Owner Only) See authorized users
 - `/setbotsetting` - (Owner Only) Set bot to Public/Private mode
 
-## Update Channel [VJ Botz](https://telegram.me/vj_botz)
+## Update Channel [TP Bots](https://t.me/TP_02_Bots)
 
-## Support Group [VJ Support](https://telegram.me/vj_bot_disscussion)
+## Support Group [TP Support](https://t.me/+gP0Ra45vYi04NWQ9)
 
-## Credit - [Tech VJ](https://youtube.com/@Tech_VJ)
+## Credit - [ᴛᴘ亗sᴇɴᴘᴀɪ](https://t.me/TPSenpai)
