@@ -10,11 +10,17 @@
 - `LOG_CHANNEL` : Log channel id start with -100xxxxxx</b>
 
 #### Commands To Use Bot
-- <b>`/start` : check bot is alive or not, know about bot
-- `/accept` : accept all pending request form channel or group.
-- `/login` : login your telegram account for string session
-- `/logout` : logout your telegram account 
-- `/broadcast` : reply this command to your broadcast message in bot.</b>
+
+- /start - Start the bot and see instructions
+- /setthumbnail - Save thumbnail (Reply to photo)
+- /seesetthumb - View your currently saved thumbnail
+- /removethumb - Remove thumbnail OR strip from video
+- /setcaption - Set a custom caption for your files
+- /seecaption - View your currently saved caption
+- /authorize - (Owner Only) Authorize a new user
+- /removeauthorize - (Owner Only) Remove a user
+- /seeauthorizeusers - (Owner Only) See authorized users
+- /setbotsetting - (Owner Only) Set bot to Public/Private mode
 
 ## Update Channel [VJ Botz](https://telegram.me/vj_botz)
 
