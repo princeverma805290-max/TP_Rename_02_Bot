@@ -5,9 +5,7 @@
 - <b>`API_ID` : Get From [my.telegram.org](https://my.telegram.org)
 - `API_HASH` : Get From [my.telegram.org](https://my.telegram.org)
 - `BOT_TOKEN` : Get From [BotFather](https://telegram.me/BotFather)
-- `DB_URI` : Mongodb Database Url [Tutorial Watch Here](https://youtu.be/DAHRmFdw99o)
-- `ADMINS` : It mean Admin/Owner Id For Broadcasting Message.
-- `LOG_CHANNEL` : Log channel id start with -100xxxxxx</b>
+- `OWNER_ID` : Owner Id
 
 #### Commands To Use Bot
 
