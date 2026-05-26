@@ -1,5 +1,5 @@
 pyrogram
 tgcrypto
-Pillow
-python-dotenv
 flask
+hachoir
+opencv-python-headless
