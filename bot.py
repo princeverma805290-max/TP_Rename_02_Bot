@@ -5,6 +5,7 @@ import threading
 import os
 import time
 import json
+import cv2  # For frame extraction
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 
@@ -108,8 +109,18 @@ async def check_access(client, message):
     )
     return False
 
-# Re-adding the Close Markup
 close_markup = InlineKeyboardMarkup([[InlineKeyboardButton("Close ❌", callback_data="close_msg")]])
+
+def take_screen_shot(video_file, output_directory, ttl):
+    out_put_file_name = f"{output_directory}/{time.time()}.jpg"
+    if not os.path.exists(output_directory): os.makedirs(output_directory)
+    cap = cv2.VideoCapture(video_file)
+    cap.set(cv2.CAP_PROP_POS_MSEC, (ttl * 1000))
+    ret, frame = cap.read()
+    if ret:
+        cv2.imwrite(out_put_file_name, frame)
+    cap.release()
+    return out_put_file_name if os.path.exists(out_put_file_name) else None
 
 def get_readable_size(bytes_size):
     for unit in ['B', 'KB', 'MB', 'GB']:
@@ -154,6 +165,7 @@ def get_commands_text():
         "> **👤 Users & Admin:**\n"
         "> `/setthumbnail` - Save thumbnail (Reply to photo)\n"
         "> `/seesetthumb` - View saved thumbnail\n"
+        "> `/getthumbnail` - Get thumbnail from a video\n"
         "> `/removethumb` - Remove thumbnail OR strip from video\n"
         "> `/setcaption` - Set custom caption\n"
         "> `/seecaption` - View saved caption\n> \n"
@@ -186,11 +198,11 @@ async def authorize_user(client, message):
     if not is_owner(message.from_user.id): return
     parts = message.text.split()
     if len(parts) == 1:
-        return await message.reply_text("⚠️ **Missing Input!**\n\n**Usage:** `/authorize <user_id>`")
+        return await message.reply_text("⚠️ **Wrong Input!**\n\n**Usage:** `/authorize <user_id>`\n**Example:** `/authorize 123456789`", reply_markup=close_markup)
     try:
         user_to_add = int(parts[1])
         authorized_users.add(user_to_add); save_database()
-        await message.reply_text(f"✅ User `{user_to_add}` authorized.")
+        await message.reply_text(f"✅ User `{user_to_add}` authorized.", reply_markup=close_markup)
     except: await message.reply_text("⚠️ User ID must be a number.")
 
 @app.on_message(filters.command("removeauthorize"))
@@ -198,13 +210,13 @@ async def remove_authorize(client, message):
     if not is_owner(message.from_user.id): return
     parts = message.text.split()
     if len(parts) == 1:
-        return await message.reply_text("⚠️ **Missing Input!**\n\n**Usage:** `/removeauthorize <user_id>`")
+        return await message.reply_text("⚠️ **Wrong Input!**\n\n**Usage:** `/removeauthorize <user_id>`\n**Example:** `/removeauthorize 123456789`", reply_markup=close_markup)
     try:
         user_to_remove = int(parts[1])
         if user_to_remove in authorized_users:
             authorized_users.remove(user_to_remove); save_database()
-            await message.reply_text(f"✅ User `{user_to_remove}` removed.")
-        else: await message.reply_text("⚠️ User not in list.")
+            await message.reply_text(f"✅ User `{user_to_remove}` removed.", reply_markup=close_markup)
+        else: await message.reply_text("⚠️ User not in list.", reply_markup=close_markup)
     except: await message.reply_text("⚠️ User ID must be a number.")
 
 @app.on_message(filters.command("seeauthorizeusers"))
@@ -229,6 +241,30 @@ async def see_thumbnail(client, message):
     if tid: await client.send_photo(chat_id=message.chat.id, photo=tid, caption="🖼️ **Your currently saved thumbnail.**", reply_markup=close_markup)
     else: await message.reply_text("ℹ️ You haven't set any thumbnail yet.")
 
+@app.on_message(filters.command("getthumbnail"))
+async def get_video_thumbnail(client, message):
+    if not await check_access(client, message): return
+    if not message.reply_to_message or not message.reply_to_message.video:
+        return await message.reply_text("⚠️ Please **reply** to a video with `/getthumbnail`.")
+    
+    status = await message.reply_text("⏳ Extracting thumbnail...")
+    try:
+        video = message.reply_to_message.video
+        if video.thumbs:
+            path = await client.download_media(video.thumbs[0].file_id)
+        else:
+            v_path = await message.reply_to_message.download()
+            path = take_screen_shot(v_path, "downloads", 2)
+            if v_path and os.path.exists(v_path): os.remove(v_path)
+
+        if path:
+            await client.send_photo(chat_id=message.chat.id, photo=path, caption="🖼️ **Video Thumbnail Extracted!**", reply_markup=close_markup)
+            if os.path.exists(path): os.remove(path)
+        else:
+            await status.edit_text("❌ Failed to extract thumbnail.")
+        await status.delete()
+    except Exception as e: await status.edit_text(f"❌ Error: {e}")
+
 @app.on_message(filters.command("setcaption"))
 async def set_caption(client, message):
     if not await check_access(client, message): return
@@ -236,7 +272,7 @@ async def set_caption(client, message):
     if len(parts) > 1:
         user_captions[message.from_user.id] = parts[1]
         save_database(); await message.reply_text("✅ **Custom caption saved successfully!**", reply_markup=close_markup)
-    else: await message.reply_text("⚠️ **Usage:** `/setcaption <text>`")
+    else: await message.reply_text("⚠️ **Wrong Input!**\n\n**Usage:** `/setcaption <your text>`\n**Example:** `/setcaption hi`", reply_markup=close_markup)
 
 @app.on_message(filters.command("seecaption"))
 async def see_caption(client, message):
@@ -250,18 +286,20 @@ async def remove_thumbnail(client, message):
     if not await check_access(client, message): return
     user_id = message.from_user.id
     if message.reply_to_message and message.reply_to_message.video:
-        msg = await message.reply_text("⏳ Processing...")
+        status = await message.reply_text("⏳ Processing thumbnail removal...")
         try:
-            file_path = await message.reply_to_message.download(progress=progress_callback, progress_args=(msg, "📥 Downloading...", time.time()))
-            await client.send_video(chat_id=message.chat.id, video=file_path, caption=message.reply_to_message.caption or "")
-            await msg.delete()
-        except Exception as e: await msg.edit_text(f"❌ Error: {e}")
-        finally: 
-            if 'file_path' in locals() and os.path.exists(file_path): os.remove(file_path)
+            v_path = await message.reply_to_message.download(progress=progress_callback, progress_args=(status, "📥 Downloading...", time.time()))
+            thumb_path = take_screen_shot(v_path, "downloads", 2)
+            dur = get_duration(v_path)
+            await client.send_video(chat_id=message.chat.id, video=v_path, thumb=thumb_path, caption=message.reply_to_message.caption or "", supports_streaming=True)
+            if thumb_path and os.path.exists(thumb_path): os.remove(thumb_path)
+            if v_path and os.path.exists(v_path): os.remove(v_path)
+            await status.delete()
+        except Exception as e: await status.edit_text(f"❌ Error: {e}")
     else:
         if user_id in user_thumbnails:
             del user_thumbnails[user_id]; save_database()
-            await message.reply_text("🗑️ **Saved thumbnail removed.**", reply_markup=close_markup)
+            await message.reply_text("🗑️ **Saved thumbnail removed from settings.**", reply_markup=close_markup)
         else: await message.reply_text("ℹ️ No thumbnail to remove.")
 
 # ==========================================
